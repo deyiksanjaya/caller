@@ -1,7 +1,7 @@
 {
     "name": "Phone",
     "short_name": "Phone",
-    "start_url": ".",
+    "start_url": "app.html",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
