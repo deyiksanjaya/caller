@@ -45,7 +45,7 @@
             color: #1f2937; /* gray-800 */
             transition: background-color 0.2s;
             font-size: 2.25rem; /* 36px */
-            font-weight: 300; /* Lighter font weight for Apple's style */
+            font-weight: 400; /* Normal font weight */
             cursor: pointer;
         }
         .keypad-btn:active {
@@ -54,14 +54,14 @@
         .keypad-btn-letters {
             /* Styling for the letters below the numbers */
             font-size: 0.65rem; /* Smaller font size for letters */
-            font-weight: 600;
+            font-weight: 600; /* Keep letters bold for contrast */
             letter-spacing: 0.12em; /* Increased letter spacing */
             margin-top: -7px; /* Brings letters closer to the number */
         }
         #asterisk-btn {
             /* Custom styling for the asterisk button */
-            font-size: 3.5rem; /* Larger font size for the asterisk */
-            line-height: 1; /* Helps with vertical centering */
+            font-size: 3.5rem;
+            padding-top: 8px; /* Add padding to push the asterisk down */
         }
         .nav-item.active {
             color: #3b82f6; /* blue-500 */
@@ -84,9 +84,9 @@
         </div>
 
         <!-- Keypad section -->
-        <div class="px-8 pb-4">
+        <div class="px-8">
             <!-- Grid spacing is now adjusted to be perfectly even and tighter -->
-            <div class="grid grid-cols-3 gap-3 justify-items-center mb-6">
+            <div class="grid grid-cols-3 gap-3 justify-items-center mb-4">
                 <!-- Row 1 -->
                 <button class="keypad-btn" data-value="1">1</button>
                 <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
@@ -106,7 +106,7 @@
             </div>
 
             <!-- Call button and backspace -->
-            <div class="flex justify-center items-center relative h-20">
+            <div class="flex justify-center items-center relative h-16">
                  <button class="bg-green-500 hover:bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-lg">
                     <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                 </button>
@@ -115,6 +115,9 @@
                 </button>
             </div>
         </div>
+
+        <!-- Spacer to push keypad up -->
+        <div class="h-10"></div>
 
         <!-- Bottom navigation bar -->
         <div class="flex justify-around items-center bg-white py-2 pb-6">
