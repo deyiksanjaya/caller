@@ -60,9 +60,9 @@
             font-weight: 500;
             margin-top: -11px;
         }
-        /* FIXED: Glow effect is now ultra-thin */
+        /* FIXED: Replaced glow with a nearly invisible 1px outline */
         .keypad-btn.glow {
-            box-shadow: 0 0 6px 1px #d1d5db; /* Ultra-thin gray-300 glow */
+            box-shadow: 0 0 0 1px #d1d5db; /* gray-300 outline, extremely subtle */
         }
         #asterisk-btn {
             font-size: 4rem;
@@ -72,8 +72,8 @@
             color: #3b82f6; /* blue-500 */
         }
         #display {
-            font-weight: 300;
-            font-size: 3rem;
+            font-weight: 400; 
+            font-size: 2.5rem;
         }
     </style>
 </head>
@@ -182,9 +182,13 @@
             }
         }
 
-        document.querySelectorAll('.keypad-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                handleKeyPress(button.dataset.value);
+        document.querySelectorAll('.keypad-btn, .bg-green-500, #backspace').forEach(button => {
+            button.addEventListener('click', (e) => {
+                // Stop regular clicks from interfering with double-tap logic
+                e.stopPropagation(); 
+                if (button.dataset.value) {
+                    handleKeyPress(button.dataset.value);
+                }
             });
         });
 
@@ -229,6 +233,12 @@
         // --- Double Tap Logic ---
         let lastTap = 0;
         mainContainer.addEventListener('touchend', (event) => {
+            // Check if the tap target is a button. If so, ignore it for double-tap.
+            if (event.target.closest('.keypad-btn, .bg-green-500, #backspace')) {
+                lastTap = 0; // Reset tap timing
+                return;
+            }
+
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
             if (tapLength < 300 && tapLength > 0) {
@@ -243,6 +253,10 @@
         
         // Also add for mouse clicks for desktop testing
          mainContainer.addEventListener('dblclick', (event) => {
+            // Check if the click target is a button.
+            if (event.target.closest('.keypad-btn, .bg-green-500, #backspace')) {
+                return;
+            }
             event.preventDefault();
             const simulatedNumber = '081234567900';
             startGuidedDialing(simulatedNumber);
