@@ -105,7 +105,7 @@
             50% { opacity: 0.2; }
         }
         .blinking {
-            animation: blink-animation 0.4s ease-in-out infinite; /* Added infinite */
+            animation: blink-animation 0.4s ease-in-out infinite;
         }
     </style>
 </head>
@@ -128,7 +128,7 @@
           Keypad Area.
         -->
         <div class="flex-grow flex items-center justify-center px-4">
-            <div class="w-full">
+            <div>
                 <div class="grid grid-cols-3 gap-5 justify-items-center mb-4">
                     <!-- Keypad Buttons with unique IDs for guidance -->
                     <button class="keypad-btn" data-value="1">1</button>
@@ -146,14 +146,13 @@
                 </div>
 
                 <!-- Call and Backspace Buttons -->
-                <!-- Repositioned backspace button to be aligned with the right side of the grid -->
-                <div class="grid grid-cols-3 gap-5 justify-items-center mt-2">
-                    <div class="w-20 h-20"></div> <!-- Placeholder to align Call button in the middle -->
-                    <button id="call-btn" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
+                <!-- Reverted back to the original layout structure while keeping the backspace improvements -->
+                <div class="flex justify-center items-center relative h-20 mt-2">
+                     <button id="call-btn" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
                         <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                     </button>
-                    <!-- Increased SVG size and adjusted positioning -->
-                    <button id="backspace" class="text-gray-500 opacity-0 transition-opacity flex items-center justify-center">
+                    <!-- Increased SVG size and adjusted positioning, as requested -->
+                    <button id="backspace" class="absolute right-0 text-gray-500 p-2 rounded-full opacity-0 transition-opacity">
                         <svg width="48" height="48" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20 5 L8 5 L2 12 L8 19 L20 19 C21.1046 19 22 18.1046 22 17 L22 7 C22 5.89543 21.1046 5 20 5 Z" fill="#e5e7eb"></path>
                             <path d="M11 10 L17 16 M17 10 L11 16" stroke="#1f2937" stroke-width="2" stroke-linecap="round"></path>
@@ -208,8 +207,6 @@
         let isRevealComplete = false;
         let revealedDigits = [];
         const simulatedNumber = '081234567900';
-        
-        // --- Bug Fix: Initialized lastTap variable to prevent errors on the first tap ---
         let lastTap = 0;
 
         // --- Mode Switching ---
@@ -220,8 +217,6 @@
             
             revealCanvas.classList.add('hidden');
             display.classList.remove('invisible-layout');
-
-            // Bug Fix: Ensure the plus sign stops blinking when switching modes
             plusSign.classList.remove('blinking');
 
             if (mode === 'reveal') {
@@ -241,7 +236,6 @@
         // --- Normal Keypad Logic ---
         function updateDisplay() {
             display.textContent = currentInput;
-            // Corrected logic: backspace button is now toggled based on input length
             backspaceButton.classList.toggle('opacity-0', currentInput.length === 0);
         }
 
@@ -264,7 +258,6 @@
             }
         }
 
-        // Bug Fix: Removed duplicate IDs from keypad buttons and now using data-value
         document.querySelectorAll('.keypad-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 if (revealModeActive) return;
@@ -294,7 +287,6 @@
         function highlightNextDigit() {
             if (!guidedDialingActive) return;
             const digit = numberToDial[currentDigitIndex];
-            // Bug Fix: Using data-value for selection as IDs were not consistently unique
             const button = document.querySelector(`.keypad-btn[data-value="${digit}"]`);
             if (button) button.classList.add('glow');
         }
@@ -340,7 +332,6 @@
             display.classList.remove('invisible-layout');
             display.innerHTML = `<span>${simulatedNumber.split('').join('</span><span>')}</span>`;
             
-            // Bug Fix: Get the final position of the digits after they've been placed in the display
             const targetRects = Array.from(display.children).map(span => span.getBoundingClientRect());
             
             display.innerHTML = '';
@@ -385,7 +376,7 @@
                 const y = event.clientY - rect.top;
                 
                 const digit = simulatedNumber[revealIndex];
-                revealedDigits.push({ char: digit, x: x + rect.left, y: y + rect.top }); // Bug Fix: Store absolute coordinates
+                revealedDigits.push({ char: digit, x: x + rect.left, y: y + rect.top });
                 
                 canvasCtx.fillStyle = '#1f2937';
                 canvasCtx.font = '2.5rem -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
@@ -405,7 +396,6 @@
         // --- Global Tap & Double Tap Logic ---
         mainContainer.addEventListener('click', (event) => {
             if (isRevealComplete && revealModeActive) {
-                // Bug Fix: Corrected the logic to check if a valid button was clicked
                 const isNavOrCanvas = event.target.closest('#nav-bar') || event.target.closest('#reveal-canvas');
                 if (!isNavOrCanvas && event.target.closest('.keypad-btn')) return;
                 if (!event.target.closest('.keypad-btn')) {
