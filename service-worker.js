@@ -4,7 +4,7 @@ const CACHE_NAME = 'keypad-cache-v1';
 // Add all the files you want to cache here
 const urlsToCache = [
   '/',
-  'index.html' 
+  'app.html' 
 ];
 
 self.addEventListener('install', event => {
