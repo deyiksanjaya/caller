@@ -105,7 +105,7 @@
             50% { opacity: 0.2; }
         }
         .blinking {
-            animation: blink-animation 0.4s ease-in-out infinite;
+            animation: blink-animation 0.4s ease-in-out;
         }
     </style>
 </head>
@@ -146,12 +146,11 @@
                 </div>
 
                 <!-- Call and Backspace Buttons -->
-                <!-- Reverted back to the original layout structure while keeping the backspace improvements -->
                 <div class="flex justify-center items-center relative h-20 mt-2">
                      <button id="call-btn" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
                         <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                     </button>
-                    <!-- Increased SVG size and adjusted positioning, as requested -->
+                    <!-- Increased SVG size and adjusted positioning -->
                     <button id="backspace" class="absolute right-0 text-gray-500 p-2 rounded-full opacity-0 transition-opacity">
                         <svg width="48" height="48" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M20 5 L8 5 L2 12 L8 19 L20 19 C21.1046 19 22 18.1046 22 17 L22 7 C22 5.89543 21.1046 5 20 5 Z" fill="#e5e7eb"></path>
@@ -389,6 +388,9 @@
                 if (revealIndex === simulatedNumber.length) {
                     isRevealComplete = true;
                     plusSign.classList.add('blinking');
+                    setTimeout(() => {
+                        plusSign.classList.remove('blinking');
+                    }, 400); 
                 }
             }
         });
@@ -396,11 +398,12 @@
         // --- Global Tap & Double Tap Logic ---
         mainContainer.addEventListener('click', (event) => {
             if (isRevealComplete && revealModeActive) {
-                const isNavOrCanvas = event.target.closest('#nav-bar') || event.target.closest('#reveal-canvas');
-                if (!isNavOrCanvas && event.target.closest('.keypad-btn')) return;
-                if (!event.target.closest('.keypad-btn')) {
-                    animateDigitsToFinalPosition();
+                // The animation is triggered by a tap anywhere on the main container,
+                // except for nav bar items.
+                if (event.target.closest('.nav-item')) {
+                    return;
                 }
+                animateDigitsToFinalPosition();
             }
         });
 
