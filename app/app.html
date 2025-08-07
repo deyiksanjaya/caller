@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Phone Keypad</title>
+    <title>Phone</title>
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,6 +29,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            user-select: none; /* Prevent text selection on double tap */
         }
         .keypad-btn {
             width: 80px;
@@ -40,7 +41,7 @@
             align-items: center;
             background-color: #e5e7eb; /* gray-200 */
             color: #1f2937; /* gray-800 */
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, box-shadow 0.3s ease-in-out;
             font-size: 2.5rem;
             font-weight: 400;
             cursor: pointer;
@@ -52,7 +53,16 @@
             font-size: 0.7rem;
             font-weight: 600;
             letter-spacing: 0.12em;
-            margin-top: -7px;
+            margin-top: -12px;
+        }
+        .keypad-plus {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: -11px;
+        }
+        /* FIXED: Glow effect is now ultra-thin */
+        .keypad-btn.glow {
+            box-shadow: 0 0 6px 1px #d1d5db; /* Ultra-thin gray-300 glow */
         }
         #asterisk-btn {
             font-size: 4rem;
@@ -70,14 +80,11 @@
 <body class="bg-white flex items-center justify-center">
     <!-- 
       Main container. 
-      h-full: Takes the full height of the parent (body).
-      flex flex-col: Enables flexbox in a column direction.
     -->
-    <div class="w-full max-w-sm h-full bg-white flex flex-col">
+    <div id="main-container" class="w-full max-w-sm h-full bg-white flex flex-col">
 
         <!-- 
           Display Area.
-          flex-shrink-0: Prevents this element from shrinking.
         -->
         <div class="flex-shrink-0 flex flex-col justify-end items-center p-6 pt-12">
             <div id="display" class="text-gray-800 h-16 mb-2 break-all text-center"></div>
@@ -86,36 +93,30 @@
 
         <!-- 
           Keypad Area.
-          flex-grow: Will take up all remaining vertical space.
-          flex, items-center, justify-center: Will center its content (the wrapper div) vertically and horizontally.
         -->
         <div class="flex-grow flex items-center justify-center px-4">
-            <!-- This wrapper is necessary to group the keypad and call buttons -->
             <div>
-                <!-- Increased gap from gap-4 to gap-6 for more spacing -->
-                <div class="grid grid-cols-3 gap-4 justify-items-center mb-4">
-                    <!-- Keypad Buttons -->
-                    <button class="keypad-btn" data-value="1">1</button>
-                    <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
-                    <button class="keypad-btn" data-value="3">3<span class="keypad-btn-letters">DEF</span></button>
-                    <button class="keypad-btn" data-value="4">4<span class="keypad-btn-letters">GHI</span></button>
-                    <button class="keypad-btn" data-value="5">5<span class="keypad-btn-letters">JKL</span></button>
-                    <button class="keypad-btn" data-value="6">6<span class="keypad-btn-letters">MNO</span></button>
-                    <button class="keypad-btn" data-value="7">7<span class="keypad-btn-letters">PQRS</span></button>
-                    <button class="keypad-btn" data-value="8">8<span class="keypad-btn-letters">TUV</span></button>
-                    <button class="keypad-btn" data-value="9">9<span class="keypad-btn-letters">WXYZ</span></button>
-                    <button id="asterisk-btn" class="keypad-btn" data-value="*">*</button>
-                    <button class="keypad-btn" data-value="0">0<span class="keypad-btn-letters">+</span></button>
-                    <button class="keypad-btn" data-value="#">#</button>
+                <div class="grid grid-cols-3 gap-5 justify-items-center mb-4">
+                    <!-- Keypad Buttons with unique IDs for guidance -->
+                    <button class="keypad-btn" data-value="1" id="btn-1">1</button>
+                    <button class="keypad-btn" data-value="2" id="btn-2">2<span class="keypad-btn-letters">ABC</span></button>
+                    <button class="keypad-btn" data-value="3" id="btn-3">3<span class="keypad-btn-letters">DEF</span></button>
+                    <button class="keypad-btn" data-value="4" id="btn-4">4<span class="keypad-btn-letters">GHI</span></button>
+                    <button class="keypad-btn" data-value="5" id="btn-5">5<span class="keypad-btn-letters">JKL</span></button>
+                    <button class="keypad-btn" data-value="6" id="btn-6">6<span class="keypad-btn-letters">MNO</span></button>
+                    <button class="keypad-btn" data-value="7" id="btn-7">7<span class="keypad-btn-letters">PQRS</span></button>
+                    <button class="keypad-btn" data-value="8" id="btn-8">8<span class="keypad-btn-letters">TUV</span></button>
+                    <button class="keypad-btn" data-value="9" id="btn-9">9<span class="keypad-btn-letters">WXYZ</span></button>
+                    <button id="asterisk-btn" class="keypad-btn" data-value="*" id="btn-*">*</button>
+                    <button class="keypad-btn" data-value="0" id="btn-0">0<span class="keypad-btn-letters keypad-plus">+</span></button>
+                    <button class="keypad-btn" data-value="#" id="btn-#">#</button>
                 </div>
 
                 <!-- Call and Backspace Buttons -->
-                <div class="flex justify-center items-center relative h-20 mt-2"> <!-- h-20 to match button height -->
-                     <!-- Changed size from w-16 h-16 to w-20 h-20 (80px) to match other buttons -->
+                <div class="flex justify-center items-center relative h-20 mt-2">
                      <button class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
                         <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                     </button>
-                    <!-- Changed icon to fa-times and adjusted position -->
                     <button id="backspace" class="absolute right-4 text-gray-500 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
                          <i class="fas fa-times fa-lg"></i>
                     </button>
@@ -125,25 +126,19 @@
 
         <!-- 
           Bottom Navigation Bar.
-          flex-shrink-0: Prevents this element from shrinking.
         -->
         <div class="flex-shrink-0 flex justify-around items-center bg-white py-2 pb-6">
             <div class="nav-item text-center text-gray-400"><i class="fas fa-star text-2xl"></i><span class="block text-xs font-medium">Favorites</span></div>
             <div class="nav-item text-center text-gray-400"><i class="fas fa-clock text-2xl"></i><span class="block text-xs font-medium">Recents</span></div>
             <div class="nav-item text-center text-gray-400"><i class="fas fa-user-circle text-2xl"></i><span class="block text-xs font-medium">Contacts</span></div>
             <div class="nav-item text-center text-blue-500 active">
-                <!-- Ikon SVG dengan posisi (cx, cy) yang disesuaikan untuk spasi yang lebih renggang -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="4" cy="4" r="3"/>
-                    <circle cx="12" cy="4" r="3"/>
-                    <circle cx="20" cy="4" r="3"/>
-                    <circle cx="4" cy="12" r="3"/>
-                    <circle cx="12" cy="12" r="3"/>
-                    <circle cx="20" cy="12" r="3"/>
-                    <circle cx="4" cy="20" r="3"/>
-                    <circle cx="12" cy="20" r="3"/>
-                    <circle cx="20" cy="20" r="3"/>
-                </svg>
+                <div class="h-8 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="4" cy="4" r="3"/> <circle cx="12" cy="4" r="3"/> <circle cx="20" cy="4" r="3"/>
+                        <circle cx="4" cy="12" r="3"/> <circle cx="12" cy="12" r="3"/> <circle cx="20" cy="12" r="3"/>
+                        <circle cx="4" cy="20" r="3"/> <circle cx="12" cy="20" r="3"/> <circle cx="20" cy="20" r="3"/>
+                    </svg>
+                </div>
                 <span class="block text-xs font-medium">Keypad</span>
             </div>
             <div class="nav-item text-center text-gray-400"><i class="fas fa-voicemail text-2xl"></i><span class="block text-xs font-medium">Voicemail</span></div>
@@ -151,30 +146,109 @@
     </div>
 
     <script>
-        // JavaScript is unchanged
         const display = document.getElementById('display');
-        const keypadButtons = document.querySelectorAll('.keypad-btn, .bg-green-500'); // Include call button for sound/haptic feedback later if needed
         const backspaceButton = document.getElementById('backspace');
+        const mainContainer = document.getElementById('main-container');
         let currentInput = '';
+        let guidedDialingActive = false;
+        let numberToDial = '';
+        let currentDigitIndex = 0;
+
         function updateDisplay() {
             display.textContent = currentInput;
-            if (currentInput.length > 0) {
-                backspaceButton.classList.remove('opacity-0');
+            backspaceButton.classList.toggle('opacity-0', currentInput.length === 0);
+        }
+
+        function handleKeyPress(value) {
+            // If guided dialing is active, check if the correct button was pressed
+            if (guidedDialingActive) {
+                if (value === numberToDial[currentDigitIndex]) {
+                    currentInput += value;
+                    updateDisplay();
+                    removeGlow(); // Remove glow from the pressed button
+                    currentDigitIndex++;
+                    if (currentDigitIndex < numberToDial.length) {
+                        // Highlight the next digit
+                        setTimeout(highlightNextDigit, 200);
+                    } else {
+                        // Finished dialing
+                        guidedDialingActive = false;
+                    }
+                }
             } else {
-                backspaceButton.classList.add('opacity-0');
+                // Normal dialing
+                currentInput += value;
+                updateDisplay();
             }
         }
-        // Separate listener for number/symbol buttons
+
         document.querySelectorAll('.keypad-btn').forEach(button => {
             button.addEventListener('click', () => {
-                currentInput += button.dataset.value;
-                updateDisplay();
+                handleKeyPress(button.dataset.value);
             });
         });
+
         backspaceButton.addEventListener('click', () => {
-            currentInput = currentInput.slice(0, -1);
-            updateDisplay();
+            // Disable backspace during guided dialing
+            if (!guidedDialingActive) {
+                currentInput = currentInput.slice(0, -1);
+                updateDisplay();
+            }
         });
+
+        // --- Guided Dialing Logic ---
+
+        function highlightNextDigit() {
+            const digit = numberToDial[currentDigitIndex];
+            const button = document.getElementById(`btn-${digit}`);
+            if (button) {
+                button.classList.add('glow');
+            }
+        }
+
+        function removeGlow() {
+            const glowingButton = document.querySelector('.glow');
+            if (glowingButton) {
+                glowingButton.classList.remove('glow');
+            }
+        }
+
+        function startGuidedDialing(number) {
+            // Prevent starting a new session if one is active
+            if (guidedDialingActive) return;
+
+            console.log("Starting guided dialing for:", number);
+            guidedDialingActive = true;
+            numberToDial = number;
+            currentDigitIndex = 0;
+            currentInput = ''; // Clear previous input
+            updateDisplay();
+            highlightNextDigit();
+        }
+
+        // --- Double Tap Logic ---
+        let lastTap = 0;
+        mainContainer.addEventListener('touchend', (event) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) {
+                // Double tap detected
+                event.preventDefault();
+                // Simulate fetching number from Firebase
+                const simulatedNumber = '081234567900';
+                startGuidedDialing(simulatedNumber);
+            }
+            lastTap = currentTime;
+        });
+        
+        // Also add for mouse clicks for desktop testing
+         mainContainer.addEventListener('dblclick', (event) => {
+            event.preventDefault();
+            const simulatedNumber = '081234567900';
+            startGuidedDialing(simulatedNumber);
+        });
+
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
