@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Keypad">
     <meta name="theme-color" content="#ffffff">
-    <link rel="apple-touch-icon" href="https://cdn.iconscout.com/icon/free/png-256/free-apple-phone-2-493154.png">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/28a745/ffffff?text=Keypad">
     
     <!-- Web App Manifest (embedded) -->
     <link rel="manifest" href='data:application/manifest+json,{
@@ -196,42 +196,13 @@
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-            .then((reg) => console.log('Service worker registered.', reg))
-            .catch((err) => console.log('Service worker not registered.', err));
+            // Use window.onload to ensure the page is fully loaded before registering
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                .then((reg) => console.log('Service worker registered.', reg))
+                .catch((err) => console.log('Service worker not registered.', err));
+            });
         }
-    </script>
-    
-    <!-- A simple inline service worker for caching -->
-    <script>
-        const CACHE_NAME = 'keypad-cache-v1';
-        const urlsToCache = [
-            '/',
-            '/styles/main.css', // Assuming you have a stylesheet
-            '/script/main.js'  // Assuming you have a script
-        ];
-
-        self.addEventListener('install', event => {
-            event.waitUntil(
-                caches.open(CACHE_NAME)
-                .then(cache => {
-                    console.log('Opened cache');
-                    return cache.addAll(urlsToCache);
-                })
-            );
-        });
-
-        self.addEventListener('fetch', event => {
-            event.respondWith(
-                caches.match(event.request)
-                .then(response => {
-                    if (response) {
-                        return response;
-                    }
-                    return fetch(event.request);
-                })
-            );
-        });
     </script>
 </body>
 </html>
