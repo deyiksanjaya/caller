@@ -69,15 +69,15 @@
 </head>
 <body class="bg-white flex items-center justify-center">
     <!-- 
-      Kontainer utama. 
-      h-full: Mengambil tinggi penuh dari parent (body).
-      flex flex-col: Mengaktifkan flexbox dengan arah kolom.
+      Main container. 
+      h-full: Takes the full height of the parent (body).
+      flex flex-col: Enables flexbox in a column direction.
     -->
     <div class="w-full max-w-sm h-full bg-white flex flex-col">
 
         <!-- 
-          Area Display.
-          flex-shrink-0: Mencegah elemen ini menyusut.
+          Display Area.
+          flex-shrink-0: Prevents this element from shrinking.
         -->
         <div class="flex-shrink-0 flex flex-col justify-end items-center p-6 pt-12">
             <div id="display" class="text-gray-800 h-16 mb-2 break-all text-center"></div>
@@ -85,15 +85,16 @@
         </div>
 
         <!-- 
-          Area Keypad.
-          flex-grow: Akan mengambil semua ruang vertikal yang tersisa.
-          flex, items-center, justify-center: Akan memusatkan kontennya (wrapper div) secara vertikal dan horizontal.
+          Keypad Area.
+          flex-grow: Will take up all remaining vertical space.
+          flex, items-center, justify-center: Will center its content (the wrapper div) vertically and horizontally.
         -->
         <div class="flex-grow flex items-center justify-center px-4">
-            <!-- Wrapper ini diperlukan untuk mengelompokkan keypad dan tombol panggil -->
+            <!-- This wrapper is necessary to group the keypad and call buttons -->
             <div>
-                <div class="grid grid-cols-3 gap-4 justify-items-center mb-4">
-                    <!-- Tombol-tombol Keypad -->
+                <!-- Increased gap from gap-4 to gap-6 for more spacing -->
+                <div class="grid grid-cols-3 gap-6 justify-items-center mb-4">
+                    <!-- Keypad Buttons -->
                     <button class="keypad-btn" data-value="1">1</button>
                     <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
                     <button class="keypad-btn" data-value="3">3<span class="keypad-btn-letters">DEF</span></button>
@@ -108,21 +109,23 @@
                     <button class="keypad-btn" data-value="#">#</button>
                 </div>
 
-                <!-- Tombol Panggil dan Hapus -->
-                <div class="flex justify-center items-center relative h-16">
-                     <button class="bg-green-500 hover:bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-lg">
+                <!-- Call and Backspace Buttons -->
+                <div class="flex justify-center items-center relative h-20 mt-2"> <!-- h-20 to match button height -->
+                     <!-- Changed size from w-16 h-16 to w-20 h-20 (80px) to match other buttons -->
+                     <button class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
                         <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                     </button>
-                    <button id="backspace" class="absolute right-4 text-gray-400 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
-                         <i class="fas fa-backspace fa-lg"></i>
+                    <!-- Changed icon to fa-times and adjusted position -->
+                    <button id="backspace" class="absolute right-4 text-gray-500 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
+                         <i class="fas fa-times fa-lg"></i>
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- 
-          Bar Navigasi Bawah.
-          flex-shrink-0: Mencegah elemen ini menyusut.
+          Bottom Navigation Bar.
+          flex-shrink-0: Prevents this element from shrinking.
         -->
         <div class="flex-shrink-0 flex justify-around items-center bg-white py-2 pb-6">
             <div class="nav-item text-center text-gray-400"><i class="fas fa-star text-2xl"></i><span class="block text-xs font-medium">Favorites</span></div>
@@ -134,9 +137,9 @@
     </div>
 
     <script>
-        // JavaScript tidak berubah
+        // JavaScript is unchanged
         const display = document.getElementById('display');
-        const keypadButtons = document.querySelectorAll('.keypad-btn');
+        const keypadButtons = document.querySelectorAll('.keypad-btn, .bg-green-500'); // Include call button for sound/haptic feedback later if needed
         const backspaceButton = document.getElementById('backspace');
         let currentInput = '';
         function updateDisplay() {
@@ -147,7 +150,8 @@
                 backspaceButton.classList.add('opacity-0');
             }
         }
-        keypadButtons.forEach(button => {
+        // Separate listener for number/symbol buttons
+        document.querySelectorAll('.keypad-btn').forEach(button => {
             button.addEventListener('click', () => {
                 currentInput += button.dataset.value;
                 updateDisplay();
