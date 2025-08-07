@@ -59,8 +59,8 @@
             font-size: 1rem;
             font-weight: 500;
             margin-top: -11px;
+            transition: opacity 0.3s ease-in-out;
         }
-        /* FIXED: Replaced glow with a nearly invisible 1px outline */
         .keypad-btn.glow {
             box-shadow: 0 0 0 1px #d1d5db; /* gray-300 outline, extremely subtle */
         }
@@ -68,12 +68,45 @@
             font-size: 4rem;
             padding-top: 8px;
         }
+        .nav-item {
+            color: #9ca3af; /* gray-400 */
+        }
         .nav-item.active {
             color: #3b82f6; /* blue-500 */
+        }
+        #display-container {
+            position: relative;
+            width: 100%;
         }
         #display {
             font-weight: 400; 
             font-size: 2.5rem;
+        }
+        .invisible-layout {
+            visibility: hidden;
+        }
+        #reveal-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .digit-animating {
+            position: absolute;
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: #1f2937;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* FIXED: Changed blink to be a single, sharp animation */
+        @keyframes blink-animation {
+            50% { opacity: 0.2; }
+        }
+        .blinking {
+            animation: blink-animation 0.4s ease-in-out;
         }
     </style>
 </head>
@@ -86,8 +119,9 @@
         <!-- 
           Display Area.
         -->
-        <div class="flex-shrink-0 flex flex-col justify-end items-center p-6 pt-12">
-            <div id="display" class="text-gray-800 h-16 mb-2 break-all text-center"></div>
+        <div id="display-container" class="flex-shrink-0 flex flex-col justify-end items-center p-6 pt-12">
+            <div id="display" class="text-gray-800 h-16 mb-2 break-all text-center flex items-center justify-center"></div>
+            <canvas id="reveal-canvas" class="hidden"></canvas>
             <div class="h-6"></div>
         </div>
 
@@ -108,13 +142,13 @@
                     <button class="keypad-btn" data-value="8" id="btn-8">8<span class="keypad-btn-letters">TUV</span></button>
                     <button class="keypad-btn" data-value="9" id="btn-9">9<span class="keypad-btn-letters">WXYZ</span></button>
                     <button id="asterisk-btn" class="keypad-btn" data-value="*" id="btn-*">*</button>
-                    <button class="keypad-btn" data-value="0" id="btn-0">0<span class="keypad-btn-letters keypad-plus">+</span></button>
+                    <button class="keypad-btn" data-value="0" id="btn-0">0<span id="plus-sign" class="keypad-btn-letters keypad-plus">+</span></button>
                     <button class="keypad-btn" data-value="#" id="btn-#">#</button>
                 </div>
 
                 <!-- Call and Backspace Buttons -->
                 <div class="flex justify-center items-center relative h-20 mt-2">
-                     <button class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
+                     <button id="call-btn" class="bg-green-500 hover:bg-green-600 text-white w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-lg">
                         <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
                     </button>
                     <button id="backspace" class="absolute right-4 text-gray-500 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
@@ -127,11 +161,11 @@
         <!-- 
           Bottom Navigation Bar.
         -->
-        <div class="flex-shrink-0 flex justify-around items-center bg-white py-2 pb-6">
-            <div class="nav-item text-center text-gray-400"><i class="fas fa-star text-2xl"></i><span class="block text-xs font-medium">Favorites</span></div>
-            <div class="nav-item text-center text-gray-400"><i class="fas fa-clock text-2xl"></i><span class="block text-xs font-medium">Recents</span></div>
-            <div class="nav-item text-center text-gray-400"><i class="fas fa-user-circle text-2xl"></i><span class="block text-xs font-medium">Contacts</span></div>
-            <div class="nav-item text-center text-blue-500 active">
+        <div id="nav-bar" class="flex-shrink-0 flex justify-around items-center bg-white py-2 pb-6">
+            <div id="favorites-btn" class="nav-item text-center"><i class="fas fa-star text-2xl"></i><span class="block text-xs font-medium">Favorites</span></div>
+            <div class="nav-item text-center"><i class="fas fa-clock text-2xl"></i><span class="block text-xs font-medium">Recents</span></div>
+            <div class="nav-item text-center"><i class="fas fa-user-circle text-2xl"></i><span class="block text-xs font-medium">Contacts</span></div>
+            <div id="keypad-nav-btn" class="nav-item text-center active">
                 <div class="h-8 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                         <circle cx="4" cy="4" r="3"/> <circle cx="12" cy="4" r="3"/> <circle cx="20" cy="4" r="3"/>
@@ -141,128 +175,242 @@
                 </div>
                 <span class="block text-xs font-medium">Keypad</span>
             </div>
-            <div class="nav-item text-center text-gray-400"><i class="fas fa-voicemail text-2xl"></i><span class="block text-xs font-medium">Voicemail</span></div>
+            <div class="nav-item text-center"><i class="fas fa-voicemail text-2xl"></i><span class="block text-xs font-medium">Voicemail</span></div>
         </div>
     </div>
 
     <script>
+        // --- DOM Elements ---
         const display = document.getElementById('display');
+        const displayContainer = document.getElementById('display-container');
         const backspaceButton = document.getElementById('backspace');
         const mainContainer = document.getElementById('main-container');
+        const favoritesButton = document.getElementById('favorites-btn');
+        const keypadNavButton = document.getElementById('keypad-nav-btn');
+        const callButton = document.getElementById('call-btn');
+        const revealCanvas = document.getElementById('reveal-canvas');
+        const plusSign = document.getElementById('plus-sign');
+        const navBar = document.getElementById('nav-bar');
+        const canvasCtx = revealCanvas.getContext('2d');
+
+        // --- State Variables ---
         let currentInput = '';
         let guidedDialingActive = false;
         let numberToDial = '';
         let currentDigitIndex = 0;
+        let revealModeActive = false;
+        let revealIndex = 0;
+        let isRevealComplete = false;
+        let revealedDigits = [];
+        const simulatedNumber = '081234567900';
 
+        // --- Mode Switching ---
+        function setMode(mode) {
+            guidedDialingActive = false;
+            revealModeActive = false;
+            removeGlow();
+            
+            revealCanvas.classList.add('hidden');
+            display.classList.remove('invisible-layout');
+
+            if (mode === 'reveal') {
+                revealModeActive = true;
+                currentInput = '';
+                display.classList.add('invisible-layout');
+                revealCanvas.classList.remove('hidden');
+                setupRevealCanvas();
+            } else { 
+                updateDisplay();
+            }
+        }
+        
+        favoritesButton.addEventListener('click', () => setMode('reveal'));
+        keypadNavButton.addEventListener('click', () => setMode('keypad'));
+
+        // --- Normal Keypad Logic ---
         function updateDisplay() {
             display.textContent = currentInput;
             backspaceButton.classList.toggle('opacity-0', currentInput.length === 0);
         }
 
         function handleKeyPress(value) {
-            // If guided dialing is active, check if the correct button was pressed
             if (guidedDialingActive) {
                 if (value === numberToDial[currentDigitIndex]) {
                     currentInput += value;
                     updateDisplay();
-                    removeGlow(); // Remove glow from the pressed button
+                    removeGlow();
                     currentDigitIndex++;
                     if (currentDigitIndex < numberToDial.length) {
-                        // Highlight the next digit
                         setTimeout(highlightNextDigit, 200);
                     } else {
-                        // Finished dialing
                         guidedDialingActive = false;
                     }
                 }
             } else {
-                // Normal dialing
                 currentInput += value;
                 updateDisplay();
             }
         }
 
-        document.querySelectorAll('.keypad-btn, .bg-green-500, #backspace').forEach(button => {
+        document.querySelectorAll('.keypad-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                // Stop regular clicks from interfering with double-tap logic
-                e.stopPropagation(); 
+                if (revealModeActive) return;
+                e.stopPropagation();
                 if (button.dataset.value) {
                     handleKeyPress(button.dataset.value);
                 }
             });
         });
 
-        backspaceButton.addEventListener('click', () => {
-            // Disable backspace during guided dialing
-            if (!guidedDialingActive) {
+        backspaceButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!guidedDialingActive && !revealModeActive) {
                 currentInput = currentInput.slice(0, -1);
                 updateDisplay();
             }
         });
 
-        // --- Guided Dialing Logic ---
+        // FIXED: Add dial functionality to call button
+        callButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentInput) {
+                window.location.href = `tel://${currentInput}`;
+            }
+        });
 
+        // --- Guided Dialing ("Secret Outline") Logic ---
         function highlightNextDigit() {
+            if (!guidedDialingActive) return;
             const digit = numberToDial[currentDigitIndex];
             const button = document.getElementById(`btn-${digit}`);
-            if (button) {
-                button.classList.add('glow');
-            }
+            if (button) button.classList.add('glow');
         }
 
         function removeGlow() {
             const glowingButton = document.querySelector('.glow');
-            if (glowingButton) {
-                glowingButton.classList.remove('glow');
-            }
+            if (glowingButton) glowingButton.classList.remove('glow');
         }
 
         function startGuidedDialing(number) {
-            // Prevent starting a new session if one is active
-            if (guidedDialingActive) return;
-
-            console.log("Starting guided dialing for:", number);
+            if (guidedDialingActive || revealModeActive) return;
+            setMode('keypad');
             guidedDialingActive = true;
             numberToDial = number;
             currentDigitIndex = 0;
-            currentInput = ''; // Clear previous input
+            currentInput = '';
             updateDisplay();
             highlightNextDigit();
         }
 
-        // --- Double Tap Logic ---
-        let lastTap = 0;
-        mainContainer.addEventListener('touchend', (event) => {
-            // Check if the tap target is a button. If so, ignore it for double-tap.
-            if (event.target.closest('.keypad-btn, .bg-green-500, #backspace')) {
-                lastTap = 0; // Reset tap timing
-                return;
-            }
+        // --- Positional Tap-to-Reveal Logic ---
+        function setupRevealCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = revealCanvas.getBoundingClientRect();
+            revealCanvas.width = rect.width * dpr;
+            revealCanvas.height = rect.height * dpr;
+            canvasCtx.scale(dpr, dpr);
+            
+            canvasCtx.clearRect(0, 0, revealCanvas.width, revealCanvas.height);
+            revealIndex = 0;
+            revealedDigits = [];
+            isRevealComplete = false;
+            plusSign.classList.remove('blinking');
+        }
 
+        function animateDigitsToFinalPosition() {
+            if (!revealedDigits.length) return;
+            
+            isRevealComplete = false;
+            plusSign.classList.remove('blinking');
+            revealCanvas.classList.add('hidden');
+
+            display.classList.remove('invisible-layout');
+            display.innerHTML = `<span>${simulatedNumber.split('').join('</span><span>')}</span>`;
+            
+            const targetRects = Array.from(display.children).map(span => span.getBoundingClientRect());
+            
+            display.innerHTML = '';
+            display.classList.add('invisible-layout');
+
+            const containerRect = mainContainer.getBoundingClientRect();
+            const animatingDigits = [];
+
+            revealedDigits.forEach((digit, index) => {
+                const span = document.createElement('span');
+                span.classList.add('digit-animating');
+                span.innerText = digit.char;
+                
+                span.style.left = `${digit.x + displayContainer.offsetLeft}px`;
+                span.style.top = `${digit.y + displayContainer.offsetTop}px`;
+                mainContainer.appendChild(span);
+                animatingDigits.push(span);
+
+                const finalRect = targetRects[index];
+                setTimeout(() => {
+                    span.style.left = `${finalRect.left - containerRect.left}px`;
+                    span.style.top = `${finalRect.top - containerRect.top}px`;
+                }, 50);
+            });
+
+            setTimeout(() => {
+                animatingDigits.forEach(el => el.remove());
+                setMode('keypad');
+                currentInput = simulatedNumber;
+                updateDisplay();
+            }, 700);
+        }
+
+        revealCanvas.addEventListener('click', (event) => {
+            if (!revealModeActive) return;
+            event.stopPropagation();
+            if (isRevealComplete) return;
+
+            if (revealIndex < simulatedNumber.length) {
+                const rect = revealCanvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                const digit = simulatedNumber[revealIndex];
+                revealedDigits.push({ char: digit, x: x, y: y });
+
+                canvasCtx.fillStyle = '#1f2937';
+                canvasCtx.font = '2.5rem -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+                canvasCtx.textAlign = 'center';
+                canvasCtx.textBaseline = 'middle';
+                canvasCtx.fillText(digit, x, y);
+
+                revealIndex++;
+
+                if (revealIndex === simulatedNumber.length) {
+                    isRevealComplete = true;
+                    plusSign.classList.add('blinking');
+                }
+            }
+        });
+
+        // --- Global Tap & Double Tap Logic ---
+        mainContainer.addEventListener('click', (event) => {
+            if (isRevealComplete && revealModeActive) {
+                if (event.target.closest('#nav-bar') || event.target.closest('#reveal-canvas')) return;
+                animateDigitsToFinalPosition();
+            }
+        });
+
+        mainContainer.addEventListener('touchend', (event) => {
+            if (event.target.closest('.keypad-btn, .bg-green-500, #backspace, .nav-item, #reveal-canvas')) {
+                lastTap = 0; return;
+            }
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
             if (tapLength < 300 && tapLength > 0) {
-                // Double tap detected
                 event.preventDefault();
-                // Simulate fetching number from Firebase
-                const simulatedNumber = '081234567900';
                 startGuidedDialing(simulatedNumber);
             }
             lastTap = currentTime;
         });
-        
-        // Also add for mouse clicks for desktop testing
-         mainContainer.addEventListener('dblclick', (event) => {
-            // Check if the click target is a button.
-            if (event.target.closest('.keypad-btn, .bg-green-500, #backspace')) {
-                return;
-            }
-            event.preventDefault();
-            const simulatedNumber = '081234567900';
-            startGuidedDialing(simulatedNumber);
-        });
 
-
+        // --- Initial Setup ---
+        setMode('keypad');
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
