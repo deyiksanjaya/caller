@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Phone Keypad</title>
+    <title>Phone</title>
     
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -68,110 +68,95 @@
     </style>
 </head>
 <body class="bg-white flex items-center justify-center">
-    <!-- Main container for the phone interface -->
+    <!-- 
+      Kontainer utama. 
+      h-full: Mengambil tinggi penuh dari parent (body).
+      flex flex-col: Mengaktifkan flexbox dengan arah kolom.
+    -->
     <div class="w-full max-w-sm h-full bg-white flex flex-col">
 
-        <!-- Display Area -->
+        <!-- 
+          Area Display.
+          flex-shrink-0: Mencegah elemen ini menyusut.
+        -->
         <div class="flex-shrink-0 flex flex-col justify-end items-center p-6 pt-12">
             <div id="display" class="text-gray-800 h-16 mb-2 break-all text-center"></div>
             <div class="h-6"></div>
         </div>
 
-        <!-- Keypad section -->
-        <!-- Menggunakan positioning 'relative' dan properti 'bottom' untuk menarik elemen ke atas -->
-        <div class="px-4 relative" style="bottom: 40px;"> 
-            <div class="grid grid-cols-3 gap-4 justify-items-center mb-4">
-                <!-- Row 1 -->
-                <button class="keypad-btn" data-value="1">1</button>
-                <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
-                <button class="keypad-btn" data-value="3">3<span class="keypad-btn-letters">DEF</span></button>
-                <!-- Row 2 -->
-                <button class="keypad-btn" data-value="4">4<span class="keypad-btn-letters">GHI</span></button>
-                <button class="keypad-btn" data-value="5">5<span class="keypad-btn-letters">JKL</span></button>
-                <button class="keypad-btn" data-value="6">6<span class="keypad-btn-letters">MNO</span></button>
-                <!-- Row 3 -->
-                <button class="keypad-btn" data-value="7">7<span class="keypad-btn-letters">PQRS</span></button>
-                <button class="keypad-btn" data-value="8">8<span class="keypad-btn-letters">TUV</span></button>
-                <button class="keypad-btn" data-value="9">9<span class="keypad-btn-letters">WXYZ</span></button>
-                <!-- Row 4 -->
-                <button id="asterisk-btn" class="keypad-btn" data-value="*">*</button>
-                <button class="keypad-btn" data-value="0">0<span class="keypad-btn-letters">+</span></button>
-                <button class="keypad-btn" data-value="#">#</button>
-            </div>
+        <!-- 
+          Area Keypad.
+          flex-grow: Akan mengambil semua ruang vertikal yang tersisa.
+          flex, items-center, justify-center: Akan memusatkan kontennya (wrapper div) secara vertikal dan horizontal.
+        -->
+        <div class="flex-grow flex items-center justify-center px-4">
+            <!-- Wrapper ini diperlukan untuk mengelompokkan keypad dan tombol panggil -->
+            <div>
+                <div class="grid grid-cols-3 gap-4 justify-items-center mb-4">
+                    <!-- Tombol-tombol Keypad -->
+                    <button class="keypad-btn" data-value="1">1</button>
+                    <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
+                    <button class="keypad-btn" data-value="3">3<span class="keypad-btn-letters">DEF</span></button>
+                    <button class="keypad-btn" data-value="4">4<span class="keypad-btn-letters">GHI</span></button>
+                    <button class="keypad-btn" data-value="5">5<span class="keypad-btn-letters">JKL</span></button>
+                    <button class="keypad-btn" data-value="6">6<span class="keypad-btn-letters">MNO</span></button>
+                    <button class="keypad-btn" data-value="7">7<span class="keypad-btn-letters">PQRS</span></button>
+                    <button class="keypad-btn" data-value="8">8<span class="keypad-btn-letters">TUV</span></button>
+                    <button class="keypad-btn" data-value="9">9<span class="keypad-btn-letters">WXYZ</span></button>
+                    <button id="asterisk-btn" class="keypad-btn" data-value="*">*</button>
+                    <button class="keypad-btn" data-value="0">0<span class="keypad-btn-letters">+</span></button>
+                    <button class="keypad-btn" data-value="#">#</button>
+                </div>
 
-            <!-- Call and backspace buttons -->
-            <div class="flex justify-center items-center relative h-16">
-                 <button class="bg-green-500 hover:bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-lg">
-                    <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
-                </button>
-                <button id="backspace" class="absolute right-4 text-gray-400 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
-                     <i class="fas fa-backspace fa-lg"></i>
-                </button>
+                <!-- Tombol Panggil dan Hapus -->
+                <div class="flex justify-center items-center relative h-16">
+                     <button class="bg-green-500 hover:bg-green-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-lg">
+                        <i class="fas fa-phone-alt" style="transform: scaleX(-1);"></i>
+                    </button>
+                    <button id="backspace" class="absolute right-4 text-gray-400 p-2 rounded-full hover:bg-gray-200 opacity-0 transition-opacity">
+                         <i class="fas fa-backspace fa-lg"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Spacer untuk mengisi ruang kosong yang ditinggalkan keypad -->
-        <div class="flex-grow"></div>
-
-        <!-- Bottom Navigation Bar -->
+        <!-- 
+          Bar Navigasi Bawah.
+          flex-shrink-0: Mencegah elemen ini menyusut.
+        -->
         <div class="flex-shrink-0 flex justify-around items-center bg-white py-2 pb-6">
-            <div class="nav-item text-center text-gray-400">
-                <i class="fas fa-star text-2xl"></i>
-                <span class="block text-xs font-medium">Favorites</span>
-            </div>
-            <div class="nav-item text-center text-gray-400">
-                <i class="fas fa-clock text-2xl"></i>
-                <span class="block text-xs font-medium">Recents</span>
-            </div>
-            <div class="nav-item text-center text-gray-400">
-                <i class="fas fa-user-circle text-2xl"></i>
-                <span class="block text-xs font-medium">Contacts</span>
-            </div>
-            <div class="nav-item text-center text-blue-500 active">
-                <i class="fas fa-th text-2xl"></i>
-                <span class="block text-xs font-medium">Keypad</span>
-            </div>
-            <div class="nav-item text-center text-gray-400">
-                <i class="fas fa-voicemail text-2xl"></i>
-                <span class="block text-xs font-medium">Voicemail</span>
-            </div>
+            <div class="nav-item text-center text-gray-400"><i class="fas fa-star text-2xl"></i><span class="block text-xs font-medium">Favorites</span></div>
+            <div class="nav-item text-center text-gray-400"><i class="fas fa-clock text-2xl"></i><span class="block text-xs font-medium">Recents</span></div>
+            <div class="nav-item text-center text-gray-400"><i class="fas fa-user-circle text-2xl"></i><span class="block text-xs font-medium">Contacts</span></div>
+            <div class="nav-item text-center text-blue-500 active"><i class="fas fa-th text-2xl"></i><span class="block text-xs font-medium">Keypad</span></div>
+            <div class="nav-item text-center text-gray-400"><i class="fas fa-voicemail text-2xl"></i><span class="block text-xs font-medium">Voicemail</span></div>
         </div>
     </div>
 
     <script>
-        // JavaScript for keypad interactivity
+        // JavaScript tidak berubah
         const display = document.getElementById('display');
         const keypadButtons = document.querySelectorAll('.keypad-btn');
         const backspaceButton = document.getElementById('backspace');
-
         let currentInput = '';
-
-        // Function to update the display
         function updateDisplay() {
             display.textContent = currentInput;
-            // Show or hide the backspace button based on input
             if (currentInput.length > 0) {
                 backspaceButton.classList.remove('opacity-0');
             } else {
                 backspaceButton.classList.add('opacity-0');
             }
         }
-
-        // Add click event listeners to all keypad buttons
         keypadButtons.forEach(button => {
             button.addEventListener('click', () => {
                 currentInput += button.dataset.value;
                 updateDisplay();
             });
         });
-
-        // Add click event listener for the backspace button
         backspaceButton.addEventListener('click', () => {
             currentInput = currentInput.slice(0, -1);
             updateDisplay();
         });
-
-        // Service Worker registration for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
