@@ -1,7 +1,7 @@
 {
-    "name": "Phone Keypad",
-    "short_name": "Keypad",
-    "start_url": ".",
+    "name": "Phone",
+    "short_name": "Phone",
+    "start_url": "app.html",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
