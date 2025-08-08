@@ -125,42 +125,39 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
 // --- Firebase Configuration ---
+// Gunakan konfigurasi dari lingkungan Canvas jika tersedia.
+// Jika tidak, Anda bisa memasukkan kredensial dari Vercel Anda di sini secara manual.
 let firebaseConfig = null;
-let database = null;
-
-// Coba ambil konfigurasi dari lingkungan Canvas terlebih dahulu
 if (typeof __firebase_config !== 'undefined' && __firebase_config) {
     try {
         firebaseConfig = JSON.parse(__firebase_config);
+        console.log("Menggunakan konfigurasi Firebase dari lingkungan Canvas.");
     } catch (e) {
-        console.error("Gagal mengurai konfigurasi Firebase dari lingkungan.", e);
+        console.error("Gagal mengurai konfigurasi Firebase dari Canvas.", e);
     }
+} else {
+    // --- TEMPAT ANDA BISA MENYALIN KREDENSIAL VERCEL SECARA MANUAL ---
+    // Hapus bagian ini di Vercel jika Anda menggunakan variabel lingkungan
+    // firebaseConfig = {
+    //     apiKey: "YOUR_VITE_FIREBASE_API_KEY",
+    //     authDomain: "YOUR_VITE_FIREBASE_AUTH_DOMAIN",
+    //     projectId: "YOUR_VITE_FIREBASE_PROJECT_ID",
+    //     storageBucket: "YOUR_VITE_FIREBASE_STORAGE_BUCKET",
+    //     messagingSenderId: "YOUR_VITE_FIREBASE_MESSAGING_SENDER_ID",
+    //     appId: "YOUR_VITE_FIREBASE_APP_ID"
+    // };
+    console.warn("Konfigurasi Firebase tidak ditemukan di lingkungan. Operasi penyimpanan data akan dilewati.");
 }
 
-// Jika tidak berhasil, coba ambil dari variabel lingkungan Vercel
-if (!firebaseConfig && import.meta.env.VITE_FIREBASE_API_KEY) {
-    console.log("Menggunakan variabel lingkungan Vercel.");
-    firebaseConfig = {
-        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-        appId: import.meta.env.VITE_FIREBASE_APP_ID
-    };
-}
-
-// Initialize Firebase jika konfigurasi ditemukan.
+let database = null;
 if (firebaseConfig) {
     try {
         const app = initializeApp(firebaseConfig);
         database = getDatabase(app);
-        console.log("Firebase initialized successfully.");
+        console.log("Firebase berhasil diinisialisasi.");
     } catch (e) {
         console.error("Gagal menginisialisasi Firebase:", e);
     }
-} else {
-    console.error("Firebase configuration not found. Skipping initialization.");
 }
 
 // --- Element References ---
