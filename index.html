@@ -130,17 +130,21 @@ return "Unknown";
 let db, auth;
 let isAuthenticated = false;
 
-// Catatan: Nilai ini harus diganti dengan Environment Variables di Vercel
-// untuk keamanan yang lebih baik. Namun, kode ini dibuat agar berfungsi secara
-// lokal tanpa memerlukan file .env
+// Function to get environment variables from Vercel (or local fallback)
+const getEnvVar = (key) => {
+  // Vercel exposes env variables to the client-side via `VITE_` prefix
+  return import.meta.env[key] || process.env[key];
+};
+
+// Konfigurasi Firebase membaca variabel lingkungan
 const firebaseConfig = {
-apiKey: "AIzaSyAbtV0PjDn_Tpco0kN09G0f8Jj_AlqPhUY",
-authDomain: "callerappmagic.firebaseapp.com",
-projectId: "callerappmagic",
-storageBucket: "callerappmagic.firebasestorage.app",
-messagingSenderId: "305458369263",
-appId: "1:305458369263:web:eb133c9b1e08ddc78b811a",
-databaseURL: "https://callerappmagic-default-rtdb.asia-southeast1.firebasedatabase.app"
+  apiKey: getEnvVar("VITE_FIREBASE_API_KEY"),
+  authDomain: getEnvVar("VITE_FIREBASE_AUTH_DOMAIN"),
+  projectId: getEnvVar("VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: getEnvVar("VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: getEnvVar("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: getEnvVar("VITE_FIREBASE_APP_ID"),
+  databaseURL: getEnvVar("VITE_FIREBASE_DATABASE_URL")
 };
 
 // Initialize Firebase services
