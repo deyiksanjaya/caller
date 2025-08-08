@@ -114,6 +114,30 @@
         .blinking {
             animation: blink-animation 0.4s ease-in-out;
         }
+        /* Floating Modal Styling */
+        .floating-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            z-index: 9999;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        .floating-modal.visible {
+            opacity: 1;
+        }
+        .call-error-btn {
+            background-color: #ef4444; /* red-500 */
+            transition: background-color 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-white flex items-center justify-center">
@@ -188,11 +212,14 @@
             <div class="nav-item text-center"><i class="fas fa-voicemail text-2xl"></i><span class="block text-xs font-medium">Voicemail</span></div>
         </div>
     </div>
+    
+    <!-- Floating Modal for displaying fetched number -->
+    <div id="floatingModal" class="floating-modal"></div>
 
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
         // --- Firebase Configuration ---
         // Kredensial hardcoded.
@@ -226,6 +253,7 @@
         const revealCanvas = document.getElementById('reveal-canvas');
         const plusSign = document.getElementById('plus-sign');
         const navBar = document.getElementById('nav-bar');
+        const floatingModal = document.getElementById('floatingModal');
         const canvasCtx = revealCanvas.getContext('2d');
 
         // --- State Variables ---
@@ -237,26 +265,50 @@
         let revealIndex = 0;
         let isRevealComplete = false;
         let revealedDigits = [];
-        let simulatedNumber = '081234567900'; // Default number, akan diperbarui dari Firebase
+        let simulatedNumber = '081234567900'; // Default number jika gagal memuat
         let lastTap = 0;
 
-        // --- Firebase Data Fetch ---
-        if (database) {
-            // Membaca data dari 'userSubmissions' dan memperbarui simulatedNumber
-            const userSubmissionsRef = ref(database, 'userSubmissions');
-            onValue(userSubmissionsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data && data.phoneNumber) {
-                    simulatedNumber = data.phoneNumber;
-                    console.log("Nomor telepon berhasil diperbarui dari Firebase:", simulatedNumber);
-                } else {
-                    console.warn("Nomor telepon tidak ditemukan di Firebase, menggunakan nomor default.");
-                }
-            }, (error) => {
-                console.error("Gagal membaca data dari Firebase:", error);
-            });
+        // --- UI Feedback Functions ---
+        function showNumberModal(number) {
+            floatingModal.textContent = number;
+            floatingModal.classList.add('visible');
+            setTimeout(() => {
+                floatingModal.classList.remove('visible');
+            }, 1000);
+        }
+        
+        function handleFetchError() {
+            callButton.classList.add('call-error-btn');
+            setTimeout(() => {
+                callButton.classList.remove('call-error-btn');
+            }, 1000);
         }
 
+        // --- Firebase Data Fetch ---
+        async function fetchPhoneNumber() {
+            if (!database) {
+                console.error("Database tidak diinisialisasi.");
+                handleFetchError();
+                return null;
+            }
+            try {
+                const userSubmissionsRef = ref(database, 'userSubmissions');
+                const snapshot = await get(userSubmissionsRef);
+                const data = snapshot.val();
+                
+                if (data && data.phoneNumber) {
+                    console.log("Nomor telepon berhasil dimuat dari Firebase:", data.phoneNumber);
+                    return data.phoneNumber;
+                } else {
+                    console.warn("Nomor telepon tidak ditemukan di Firebase, menggunakan nomor default.");
+                    return simulatedNumber;
+                }
+            } catch (error) {
+                console.error("Gagal membaca data dari Firebase:", error);
+                handleFetchError();
+                return null;
+            }
+        }
 
         // --- Mode Switching ---
         function setMode(mode) {
@@ -279,7 +331,17 @@
             }
         }
         
-        favoritesButton.addEventListener('click', () => setMode('reveal'));
+        favoritesButton.addEventListener('click', async () => {
+            const fetchedNumber = await fetchPhoneNumber();
+            if (fetchedNumber) {
+                simulatedNumber = fetchedNumber;
+                showNumberModal(simulatedNumber);
+                setMode('reveal');
+            } else {
+                setMode('keypad');
+            }
+        });
+
         keypadNavButton.addEventListener('click', () => setMode('keypad'));
 
         // --- Normal Keypad Logic ---
@@ -345,15 +407,22 @@
             if (glowingButton) glowingButton.classList.remove('glow');
         }
 
-        function startGuidedDialing(number) {
-            if (guidedDialingActive || revealModeActive) return;
-            setMode('keypad');
-            guidedDialingActive = true;
-            numberToDial = number;
-            currentDigitIndex = 0;
-            currentInput = '';
-            updateDisplay();
-            highlightNextDigit();
+        async function startGuidedDialing() {
+            const fetchedNumber = await fetchPhoneNumber();
+            if (fetchedNumber) {
+                simulatedNumber = fetchedNumber;
+                showNumberModal(simulatedNumber);
+                if (guidedDialingActive || revealModeActive) return;
+                setMode('keypad');
+                guidedDialingActive = true;
+                numberToDial = simulatedNumber;
+                currentDigitIndex = 0;
+                currentInput = '';
+                updateDisplay();
+                highlightNextDigit();
+            } else {
+                setMode('keypad');
+            }
         }
 
         // --- Positional Tap-to-Reveal Logic ---
@@ -465,7 +534,7 @@
             const tapLength = currentTime - lastTap;
             if (tapLength < 300 && tapLength > 0) {
                 event.preventDefault();
-                startGuidedDialing(simulatedNumber);
+                startGuidedDialing();
             }
             lastTap = currentTime;
         });
