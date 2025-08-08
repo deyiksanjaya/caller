@@ -18,12 +18,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Perbaikan: Mencegah seleksi teks di seluruh halaman secara paksa */
-        *, ::before, ::after {
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
+        /* Perbaikan: Mencegah seleksi teks di seluruh halaman */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         /* Custom styles to ensure the app looks and feels native */
@@ -136,7 +136,7 @@
         -->
         <div class="flex-grow flex items-center justify-center px-4">
             <div>
-                <div class="grid grid-cols-3 gap-5 justify-items-center mb-4">
+                <div class="grid grid-cols-3 gap-4 justify-items-center mb-4">
                     <!-- Keypad Buttons with unique IDs for guidance -->
                     <button class="keypad-btn" data-value="1">1</button>
                     <button class="keypad-btn" data-value="2">2<span class="keypad-btn-letters">ABC</span></button>
