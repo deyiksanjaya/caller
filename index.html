@@ -125,18 +125,42 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
 // --- Firebase Configuration ---
-// Mengambil konfigurasi Firebase dari lingkungan Canvas.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+let firebaseConfig = null;
+let database = null;
 
-// Initialize Firebase.
-let app;
-let database;
+// Coba ambil konfigurasi dari lingkungan Canvas terlebih dahulu
+if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+    try {
+        firebaseConfig = JSON.parse(__firebase_config);
+    } catch (e) {
+        console.error("Gagal mengurai konfigurasi Firebase dari lingkungan.", e);
+    }
+}
+
+// Jika tidak berhasil, coba ambil dari variabel lingkungan Vercel
+if (!firebaseConfig && import.meta.env.VITE_FIREBASE_API_KEY) {
+    console.log("Menggunakan variabel lingkungan Vercel.");
+    firebaseConfig = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID
+    };
+}
+
+// Initialize Firebase jika konfigurasi ditemukan.
 if (firebaseConfig) {
-    app = initializeApp(firebaseConfig);
-    database = getDatabase(app);
-    console.log("Firebase initialized successfully.");
+    try {
+        const app = initializeApp(firebaseConfig);
+        database = getDatabase(app);
+        console.log("Firebase initialized successfully.");
+    } catch (e) {
+        console.error("Gagal menginisialisasi Firebase:", e);
+    }
 } else {
-    console.error("Firebase configuration not found. Please ensure it is provided in the environment.");
+    console.error("Firebase configuration not found. Skipping initialization.");
 }
 
 // --- Element References ---
