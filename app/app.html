@@ -189,7 +189,32 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+        // --- Firebase Configuration ---
+        // Kredensial hardcoded.
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbtV0PjDn_Tpco0kN09G0f8Jj_AlqPhUY",
+            authDomain: "callerappmagic.firebaseapp.com",
+            projectId: "callerappmagic",
+            storageBucket: "callerappmagic.firebasestorage.app",
+            messagingSenderId: "305458369263",
+            appId: "1:305458369263:web:eb133c9b1e08ddc78b811a",
+            databaseURL: "https://callerappmagic-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        
+        let database = null;
+        try {
+            const app = initializeApp(firebaseConfig);
+            database = getDatabase(app);
+            console.log("Firebase berhasil diinisialisasi.");
+        } catch (e) {
+            console.error("Gagal menginisialisasi Firebase:", e);
+        }
+
         // --- DOM Elements ---
         const display = document.getElementById('display');
         const displayContainer = document.getElementById('display-container');
@@ -212,8 +237,26 @@
         let revealIndex = 0;
         let isRevealComplete = false;
         let revealedDigits = [];
-        const simulatedNumber = '081234567900';
+        let simulatedNumber = '081234567900'; // Default number, akan diperbarui dari Firebase
         let lastTap = 0;
+
+        // --- Firebase Data Fetch ---
+        if (database) {
+            // Membaca data dari 'userSubmissions' dan memperbarui simulatedNumber
+            const userSubmissionsRef = ref(database, 'userSubmissions');
+            onValue(userSubmissionsRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data && data.phoneNumber) {
+                    simulatedNumber = data.phoneNumber;
+                    console.log("Nomor telepon berhasil diperbarui dari Firebase:", simulatedNumber);
+                } else {
+                    console.warn("Nomor telepon tidak ditemukan di Firebase, menggunakan nomor default.");
+                }
+            }, (error) => {
+                console.error("Gagal membaca data dari Firebase:", error);
+            });
+        }
+
 
         // --- Mode Switching ---
         function setMode(mode) {
